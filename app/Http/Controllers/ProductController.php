@@ -15,9 +15,30 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('products.index');
+        $variants=Variant::with('variantOptions')->get();
+        $products=Product::with('productVariantPrices.productVariantOne','productVariantPrices.productVariantTwo')
+        ->where(function($query) use ($request){
+            if($request->title){
+                $query->where('title', 'like', '%'.$request->title.'%')->get();
+            }
+            if($request->variant){
+                $query->whereHas('productVariant',function($q) use ($request){
+                    $q->where('variant',$request->variant);
+                })->get();
+            }
+            if($request->price_from && $request->price_to){
+                $query->whereHas('productVariantPrices', function($q) use ($request){
+                    $q->whereBetween('price',[$request->price_from,$request->price_to]);
+                })->get();
+            }
+            if($request->date){
+                $query->whereDate('created_at',$request->date)->get();
+            }
+        })
+        ->paginate(2);
+        return view('products.index',compact('products','variants'));
     }
 
     /**
