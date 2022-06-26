@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVariantPrice extends Model
 {
+    protected $guarded = [];
 
     public function productVariantOne()
     {
